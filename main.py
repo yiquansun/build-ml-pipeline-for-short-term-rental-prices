@@ -26,7 +26,10 @@ _steps = [
 def go(config: DictConfig):
 
     ## ---------------new added----------------------------
-    components_dir = os.path.join(hydra.utils.get_original_cwd(), "components")
+    # This is the root of your project
+    project_root = hydra.utils.get_original_cwd()
+    components_dir = os.path.join(project_root, "components")
+    src_dir = os.path.join(project_root, "src")
     ## ---------------new added ends-----------------------
     # Setup the wandb experiment. All runs will be grouped under this name
     os.environ["WANDB_PROJECT"] = config["main"]["project_name"]
@@ -61,7 +64,7 @@ def go(config: DictConfig):
             print("##################in step download")
             ## 1️⃣ MLflow Download Step: get_data Component
             result = mlflow.run(
-                os.path.join(config['main']['components_repository'], "get_data"),
+                os.path.join(components_dir, "get_data"),
                 "main",
                 env_manager="conda",
                 parameters={
@@ -156,7 +159,7 @@ def go(config: DictConfig):
             ##################
 
             _ = mlflow.run(
-                os.path.join(hydra.utils.get_original_cwd(), "src", "basic_cleaning"),
+                os.path.join(src_dir, "basic_cleaning"),
                 "main",
                 parameters={
                     "input_artifact": "sample.csv:latest",
@@ -182,14 +185,14 @@ def go(config: DictConfig):
             
         if "train_val_test_split" in active_steps:
             _ = mlflow.run(
-                f"{config['main']['components_repository']}/train_val_test_split",
+                os.path.join(components_dir, "train_val_test_split"),
                 "main",
                 parameters={
                     "input_artifact": "clean_sample.csv:latest",  # output of basic_cleaning
                     "test_size": config["modeling"]["test_size"],
                     "random_seed": config["modeling"]["random_seed"],
                     "stratify_by": config["modeling"]["stratify_by"],
-                    "output_train": "train.csv",
+                    "output_train": "trainval_data.csv",
                     "output_val": "val.csv",
                     "output_test": "test.csv"
                 },
@@ -213,7 +216,7 @@ def go(config: DictConfig):
             trainval_data_local_path = "trainval_data.csv"
             
             mlflow.run(
-                os.path.join(hydra.utils.get_original_cwd(), "src", "train_random_forest"), # Changed 'components' to 'src'
+                os.path.join(src_dir, "train_random_forest"), # Changed 'components' to 'src'
                 "main",
                 parameters={
                     "trainval_artifact": trainval_data_local_path,  # path to trainval_data.csv
@@ -233,7 +236,7 @@ def go(config: DictConfig):
             ##################
 
             _ = mlflow.run(
-                    os.path.join(os.getcwd(), "components", "test_regression_model"), # Changed project_config to config
+                    os.path.join(src_dir, "test_regression_model"), # Changed project_config to config
                     "main",
                     parameters={
                         "mlflow_model": "yiquan_sun-cariad/build-ml-pipeline-for-short-term-rental-prices-src_train_random_forest/rf_tfidf10_mf0.5:prod",
