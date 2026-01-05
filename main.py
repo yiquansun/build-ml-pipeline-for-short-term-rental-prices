@@ -213,8 +213,8 @@ def go(config: DictConfig):
             trainval_data_local_path = "trainval_data.csv"
             
             mlflow.run(
-                os.path.join(components_dir, "train_random_forest"),
-                "train_random_forest",
+                os.path.join(hydra.utils.get_original_cwd(), "src", "train_random_forest"), # Changed 'components' to 'src'
+                "main",
                 parameters={
                     "trainval_artifact": trainval_data_local_path,  # path to trainval_data.csv
                     "val_size": config["modeling"]["val_size"],
