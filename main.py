@@ -208,7 +208,10 @@ def go(config: DictConfig):
             ##################
             # Implement here #
             ##################
-
+            # You might need to capture the output of the data split step like this:
+            # (Note: Use the variable name your code expects)
+            trainval_data_local_path = "trainval_data.csv"
+            
             mlflow.run(
                 os.path.join(components_dir, "train_random_forest"),
                 "train_random_forest",
