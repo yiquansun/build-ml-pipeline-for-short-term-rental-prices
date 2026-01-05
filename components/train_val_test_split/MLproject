@@ -1,26 +1,25 @@
-name: download_file
+name: train_val_test_split
 conda_env: conda.yml
 
 entry_points:
-  main:
+  train_val_test_split:
     parameters:
-
-      input:
-        description: Artifact to split (a CSV file)
+      input_artifact:
         type: string
-
+        default: "clean_sample.csv"
       test_size:
-        description: Size of the test split. Fraction of the dataset, or number of items
-        type: string
-
+        type: float
+        default: 0.2
       random_seed:
-        description: Seed for the random number generator. Use this for reproducibility
-        type: string
+        type: int
         default: 42
-
       stratify_by:
-        description: Column to use for stratification (if any)
         type: string
-        default: 'none'
+        default: "none"
+    command: >
+      python run.py
+      --input_artifact {input_artifact}
+      --test_size {test_size}
+      --random_seed {random_seed}
+      --stratify_by {stratify_by}
 
-    command: "python run.py {input} {test_size} --random_seed {random_seed} --stratify_by {stratify_by}"

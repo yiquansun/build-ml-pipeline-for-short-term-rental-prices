@@ -1,0 +1,23 @@
+name: basic_cleaning
+
+conda_env: conda.yml
+
+entry_points:
+  main:
+    parameters:
+      input_artifact: {type: str, description: "Input artifact name"}
+      output_artifact: {type: str, description: "Output artifact name"}
+      output_type: {type: str, description: "Type of artifact"}
+      output_description: {type: str, description: "Description of the artifact"}
+      min_price: {type: float, default: 0, description: "Minimum price for filtering"}
+      max_price: {type: float, default: 10000, description: "Maximum price for filtering"}
+      project_name: {type: str, default: "eda_project", description: "W&B project name"}
+    command: >
+      python run.py
+      --input_artifact {input_artifact}
+      --output_artifact {output_artifact}
+      --output_type {output_type}
+      --output_description "{output_description}"
+      --min_price {min_price}
+      --max_price {max_price}
+      --project_name {project_name}

@@ -27,7 +27,17 @@ def go(args):
     model_local_path = run.use_artifact(args.mlflow_model).download()
 
     # Download test dataset
-    test_dataset_path = run.use_artifact(args.test_dataset).file()
+    #test_dataset_path = run.use_artifact(args.test_dataset).file()
+    
+    ##------------------------------------------------------------------------------------
+    # To this:
+    test_artifact = run.use_artifact(args.test_dataset)
+    test_artifact_path = test_artifact.download() # This downloads to a default folder
+    # Find the csv file inside that folder regardless of the folder name
+    import glob
+    test_dataset_path = glob.glob(f"{test_artifact_path}/*.csv")[0]
+    ##------------------------------------------------------------------------------------
+
 
     # Read test dataset
     X_test = pd.read_csv(test_dataset_path)

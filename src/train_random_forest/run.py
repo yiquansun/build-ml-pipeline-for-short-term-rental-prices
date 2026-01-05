@@ -41,12 +41,23 @@ logger = logging.getLogger()
 def go(args):
 
     run = wandb.init(job_type="train_random_forest")
-    run.config.update(args)
+    #run.config.update(args)
+    with open(args.rf_config) as fp:
+        rf_config = json.load(fp)
+
+    run.config.update(
+    {
+        "n_estimators": rf_config["n_estimators"],
+        "max_features": rf_config["max_features"],
+        "max_tfidf_features": args.max_tfidf_features,
+    }
+)
 
     # Get the Random Forest configuration and update W&B
     with open(args.rf_config) as fp:
         rf_config = json.load(fp)
     run.config.update(rf_config)
+
 
     # Fix the random seed for the Random Forest, so we get reproducible results
     rf_config['random_state'] = args.random_seed
@@ -54,10 +65,25 @@ def go(args):
     ######################################
     # Use run.use_artifact(...).file() to get the train and validation artifact (args.trainval_artifact)
     # and save the returned path in train_local_path
-    trainval_local_path = # YOUR CODE HERE
-    ######################################
+    #trainval_local_path = run.use_artifact(args.trainval_artifact).file() # YOUR CODE HERE
+    artifact = run.use_artifact(args.trainval_artifact)  # pass artifact name with version
+    trainval_local_path = artifact.download() 
 
-    X = pd.read_csv(trainval_local_path)
+    ####-----------------
+    # Use this to find the CSV regardless of the specific filename inside the folder
+    # Find the CSV file inside that directory
+    import glob
+    csv_files = glob.glob(os.path.join(trainval_local_path, "*.csv"))
+    if not csv_files:
+        raise FileNotFoundError(f"No CSV file found in {trainval_local_path}")
+    
+    logger.info(f"Loading data from: {csv_files[0]}")
+    ####------------------------
+    ######################################
+    logger.info(f"Loading dataset from {csv_files[0]}")
+    X = pd.read_csv(csv_files[0])
+    #X = pd.read_csv(trainval_local_path)
+    #X = pd.read_csv(os.path.join(trainval_local_path, "trainval_data.csv"))
     y = X.pop("price")  # this removes the column "price" from X and puts it into y
 
     logger.info(f"Minimum price: {y.min()}, Maximum price: {y.max()}")
@@ -76,6 +102,7 @@ def go(args):
     ######################################
     # Fit the pipeline sk_pipe by calling the .fit method on X_train and y_train
     # YOUR CODE HERE
+    sk_pipe.fit(X_train, y_train)
     ######################################
 
     # Compute r2 and MAE
@@ -87,7 +114,9 @@ def go(args):
 
     logger.info(f"Score: {r_squared}")
     logger.info(f"MAE: {mae}")
-
+    ##---------- Log metrics as top-level so you can sort by them
+    run.log({"r2": r_squared, "mae": mae})
+    ##----------------------------------------
     logger.info("Exporting model")
 
     # Save model package in the MLFlow sklearn format
@@ -98,6 +127,7 @@ def go(args):
     # Save the sk_pipe pipeline as a mlflow.sklearn model in the directory "random_forest_dir"
     # HINT: use mlflow.sklearn.save_model
     # YOUR CODE HERE
+    mlflow.sklearn.save_model(sk_pipe, "random_forest_dir")
     ######################################
 
     ######################################
@@ -107,6 +137,14 @@ def go(args):
     # you just created to add the "random_forest_dir" directory to the artifact, and finally use
     # run.log_artifact to log the artifact to the run
     # YOUR CODE HERE
+    artifact = wandb.Artifact(
+        name=args.output_artifact,
+        type="model_export",
+        description="Random Forest regression model",
+        metadata=rf_config
+    )
+    artifact.add_dir("random_forest_dir")
+    run.log_artifact(artifact)
     ######################################
 
     # Plot feature importance
@@ -117,6 +155,7 @@ def go(args):
     run.summary['r2'] = r_squared
     # Now log the variable "mae" under the key "mae".
     # YOUR CODE HERE
+    run.summary['mae'] = mae
     ######################################
 
     # Upload to W&B the feture importance visualization
@@ -156,7 +195,10 @@ def get_inference_pipeline(rf_config, max_tfidf_features):
     # Build a pipeline with two steps:
     # 1 - A SimpleImputer(strategy="most_frequent") to impute missing values
     # 2 - A OneHotEncoder() step to encode the variable
-    non_ordinal_categorical_preproc = # YOUR CODE HERE
+    non_ordinal_categorical_preproc = Pipeline([
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder())
+    ])              # YOUR CODE HERE
     ######################################
 
     # Let's impute the numerical columns to make sure we can handle missing values
@@ -215,7 +257,10 @@ def get_inference_pipeline(rf_config, max_tfidf_features):
     # ColumnTransformer instance that we saved in the `preprocessor` variable, and a step called "random_forest"
     # with the random forest instance that we just saved in the `random_forest` variable.
     # HINT: Use the explicit Pipeline constructor so you can assign the names to the steps, do not use make_pipeline
-    sk_pipe = # YOUR CODE HERE
+    sk_pipe = Pipeline([
+        ("preprocessor", preprocessor),
+        ("random_forest", random_forest)
+    ])# YOUR CODE HERE
 
     return sk_pipe, processed_features
 
