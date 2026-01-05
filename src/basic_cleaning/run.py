@@ -83,6 +83,12 @@ def clean_data(input_path: str, min_price: float, max_price: float) -> pd.DataFr
     # Optional: reset index
     df_clean.reset_index(drop=True, inplace=True)
 
+    #####-new added-----------------------------------------------------------
+    # Filter for NYC coordinates only to remove outliers
+    idx = df_clean['longitude'].between(-74.25, -73.50) & df_clean['latitude'].between(40.5, 41.2)
+    df_clean = df_clean[idx].copy()
+    #####-new added ends------------------------------------------------------
+    
     # Save cleaned CSV
     cleaned_csv = "clean_sample.csv"
     df_clean.to_csv(cleaned_csv, index=False)
