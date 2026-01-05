@@ -25,6 +25,9 @@ _steps = [
 @hydra.main(version_base=None, config_name='config', config_path='.')  # Adding version_base for Python 3.13 compatibility
 def go(config: DictConfig):
 
+    ## ---------------new added----------------------------
+    components_dir = os.path.join(hydra.utils.get_original_cwd(), "components")
+    ## ---------------new added ends-----------------------
     # Setup the wandb experiment. All runs will be grouped under this name
     os.environ["WANDB_PROJECT"] = config["main"]["project_name"]
     os.environ["WANDB_RUN_GROUP"] = config["main"]["experiment_name"]
