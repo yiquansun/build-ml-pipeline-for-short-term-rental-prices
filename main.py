@@ -213,7 +213,7 @@ def go(config: DictConfig):
             ##################
             # You might need to capture the output of the data split step like this:
             # (Note: Use the variable name your code expects)
-            trainval_data_local_path = "trainval_data.csv"
+            trainval_data_local_path = "trainval_data.csv:latest"
             
             mlflow.run(
                 os.path.join(src_dir, "train_random_forest"), # Changed 'components' to 'src'
