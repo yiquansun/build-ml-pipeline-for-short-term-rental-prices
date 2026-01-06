@@ -1,3 +1,12 @@
+# Udacity Submission: Project Links
+* **GitHub Repository:** https://github.com/yiquansun/build-ml-pipeline-for-short-term-rental-prices
+* **W&B Project 1 (nyc_airbnb):** https://wandb.ai/yiquan_sun-cariad/nyc_airbnb?nw=nwuseryiquan_sun
+* **W&B Project 2 (Modeling):** https://wandb.ai/yiquan_sun-cariad/build-ml-pipeline-for-short-term-rental-prices-src_train_random_forest?nw=nwuseryiquan_sun
+
+> **Reviewer Note:** This pipeline utilizes two public W&B projects. Project 1 contains the initial data ingestion and cleaning artifacts. Project 2 contains the model training, hyperparameter optimization, and final test evaluation.
+---
+
+
 # Build an ML Pipeline for Short-Term Rental Prices in NYC
 You are working for a property management company renting rooms and properties for short periods of 
 time on various rental platforms. You need to estimate the typical price for a given property based 
